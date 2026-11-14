@@ -2,7 +2,7 @@
 
 [spec](spec.md) · [plan](plan.md) · [tasks](tasks.md) · [spec (readable)](spec-humanreadable.md) · [plan (readable)](plan-humanreadable.md) · [tasks (readable)](tasks-humanreadable.md)
 
-Status: In progress
+Status: Done
 
 ## Answers to the open questions
 - Animated gifs keep their animation when the result is gif or webp, otherwise the first frame is used.

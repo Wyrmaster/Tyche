@@ -2,7 +2,7 @@
 
 [spec](spec.md) · [plan](plan.md) · [tasks](tasks.md) · [spec (readable)](spec-humanreadable.md) · [plan (readable)](plan-humanreadable.md) · [tasks (readable)](tasks-humanreadable.md)
 
-Status: In progress
+Status: Done
 
 ## Decisions
 

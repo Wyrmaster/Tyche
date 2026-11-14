@@ -2,7 +2,7 @@
 
 [spec](spec.md) · [spec (readable)](spec-humanreadable.md)
 
-Status: In progress
+Status: Done
 
 A small service on your home network that hands out a random picture from folders you choose, so a Homarr dashboard
 background changes on every load. It can shrink the picture to the right size first.
@@ -78,10 +78,10 @@ Small Alpine image with ImageMagick inside, not running as root.
 ### [FR-8](spec.md#fr-8-github-build-on-version-tags) GitHub build
 Push a tag like `v1.0.1` and GitHub builds and publishes the image.
 
-- [ ] [AC-8.1](spec.md#ac-8-1) Only version tags publish
+- [x] [AC-8.1](spec.md#ac-8-1) Only version tags publish
 - [x] [AC-8.2](spec.md#ac-8-2) Build number is the GitHub run number (`v1.0.1.7`)
-- [ ] [AC-8.3](spec.md#ac-8-3) Pushed to GHCR as `v1.0.1.7`, `v1.0.1` and `latest`
-- [ ] [AC-8.4](spec.md#ac-8-4) Failing tests stop the release
+- [x] [AC-8.3](spec.md#ac-8-3) Pushed to GHCR as `v1.0.1.7`, `v1.0.1` and `latest`
+- [x] [AC-8.4](spec.md#ac-8-4) Failing tests stop the release
 - [x] [AC-8.5](spec.md#ac-8-5) Releasing needs no code change
 
 ### [FR-9](spec.md#fr-9-versioning-and-author-in-the-project) Version and author

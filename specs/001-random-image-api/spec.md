@@ -2,7 +2,7 @@
 
 [spec](spec.md) · [spec (readable)](spec-humanreadable.md)
 
-Status: In progress
+Status: Done
 
 ## Problem
 Dashboards such as Homarr can use an image URL as background. Stefan Pichler wants one small service on the home network
@@ -92,10 +92,10 @@ The service is delivered as a small Alpine-based image with ImageMagick installe
 ### FR-8 GitHub build on version tags
 A GitHub Actions workflow builds and publishes the image when a tag like `v1.0.1` is pushed.
 
-- [ ] <a id="ac-8-1"></a>**AC-8.1** Pushing a tag `vMAJOR.MINOR.PATCH` starts the workflow; other pushes do not publish an image
+- [x] <a id="ac-8-1"></a>**AC-8.1** Pushing a tag `vMAJOR.MINOR.PATCH` starts the workflow; other pushes do not publish an image
 - [x] <a id="ac-8-2"></a>**AC-8.2** The build number is the GitHub run number, giving the build version `v1.0.1.<run>`
-- [ ] <a id="ac-8-3"></a>**AC-8.3** The image is pushed to GHCR with the tags `v1.0.1.<run>`, `v1.0.1` and `latest`
-- [ ] <a id="ac-8-4"></a>**AC-8.4** The build runs the tests and fails without publishing when they fail
+- [x] <a id="ac-8-3"></a>**AC-8.3** The image is pushed to GHCR with the tags `v1.0.1.<run>`, `v1.0.1` and `latest`
+- [x] <a id="ac-8-4"></a>**AC-8.4** The build runs the tests and fails without publishing when they fail
 - [x] <a id="ac-8-5"></a>**AC-8.5** Version information comes from the tag only, nothing in the source has to change for a release
 
 ### FR-9 Versioning and author in the project
