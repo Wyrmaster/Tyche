@@ -1,0 +1,25 @@
+# Development: builds the image from the local source.
+#   docker compose -f compose.dev.yaml up --build
+# Put a few small test images into ./dev-images/nature and ./dev-images/city.
+services:
+  tyche:
+    image: tyche:dev
+    build:
+      context: .
+      dockerfile: Tyche/Service/Library/Dockerfile
+    ports:
+      - "8080:8080"
+    mem_limit: 1g
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ImageApi__Collections__nature: /images/nature
+      ImageApi__Collections__city: /images/city
+      ImageApi__DefaultCollection: nature
+      ImageApi__CacheMaxSizeMb: 100
+      ImageApi__MaxConcurrentProcesses: 2
+    volumes:
+      - ./dev-images:/images:ro
+      - tyche-dev-cache:/cache
+
+volumes:
+  tyche-dev-cache:

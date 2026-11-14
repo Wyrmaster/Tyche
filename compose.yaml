@@ -1,0 +1,20 @@
+# Productive use: runs the published image. For development see compose.dev.yaml.
+services:
+  tyche:
+    image: ghcr.io/wyrmaster/tyche:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # name -> folder inside the container; the default collection is used without ?collection=
+      ImageApi__Collections__nature: /images/nature
+      ImageApi__Collections__city: /images/city
+      ImageApi__DefaultCollection: nature
+      # optional: ImageApi__MaxDimension: 8192
+      # optional: ImageApi__CacheMaxSizeMb: 500
+    volumes:
+      - /path/to/your/images:/images:ro
+      - tyche-cache:/cache
+
+volumes:
+  tyche-cache:

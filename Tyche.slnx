@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="compose.yaml" />
+    <File Path="Directory.Build.props" />
+  </Folder>
+  <Project Path="Tyche/Service/Library/Tyche.Service.csproj" />
+  <Project Path="Tyche/Service/Test/Tyche.Service.Test.csproj" />
+</Solution>
