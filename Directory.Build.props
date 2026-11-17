@@ -10,4 +10,16 @@
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
+  <!-- Complexity gate: same thresholds as the Rider plugins (cognitive 10, cyclomatic 11) -->
+  <PropertyGroup>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <WarningsAsErrors>$(WarningsAsErrors);CA1502;S3776</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="10.36.0.15337" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)SonarLint.xml" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)CodeMetricsConfig.txt" />
+  </ItemGroup>
+
 </Project>

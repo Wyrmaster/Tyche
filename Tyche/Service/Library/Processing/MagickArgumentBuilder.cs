@@ -62,6 +62,14 @@ public sealed class MagickArgumentBuilder : IMagickArgumentBuilder
       AddResize(arguments, request);
     }
 
+    AddOutputOptions(arguments, target, animated);
+
+    arguments.Add($"{formats.GetMagickCoder(target)}:{outputPath}");
+    return arguments;
+  }
+
+  private static void AddOutputOptions(List<string> arguments, ImageFormat target, bool animated)
+  {
     if (animated)
     {
       arguments.Add("+repage");
@@ -75,9 +83,6 @@ public sealed class MagickArgumentBuilder : IMagickArgumentBuilder
     {
       arguments.AddRange(["-quality", Quality.ToString(CultureInfo.InvariantCulture)]);
     }
-
-    arguments.Add($"{formats.GetMagickCoder(target)}:{outputPath}");
-    return arguments;
   }
 
   private static void AddResize(List<string> arguments, ImageRequest request)

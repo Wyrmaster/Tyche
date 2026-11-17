@@ -37,48 +37,58 @@ public sealed class ImageService : IImageService
   {
     for (var attempt = 0; attempt < MaxAttempts; attempt++)
     {
-      var listing = catalog.GetImages(request.Collection);
-      if (listing.Status == CatalogStatus.UnknownCollection)
+      var result = await TryGetRandomImageAsync(request, cancellationToken);
+      if (result is not null)
       {
-        return ImageResult.NotFound($"Collection '{request.Collection}' does not exist.");
+        return result;
       }
-
-      if (listing.Status == CatalogStatus.Empty)
-      {
-        return ImageResult.NotFound($"Collection '{listing.CollectionName}' contains no images.");
-      }
-
-      var source = picker.Pick(listing.Images);
-      FileInfo file = new(source.Path);
-      if (!file.Exists)
-      {
-        // The listing is stale (file removed within the listing cache time): rescan and pick again.
-        catalog.Invalidate(listing.CollectionName);
-        continue;
-      }
-
-      if (request.IsPassThrough)
-      {
-        try
-        {
-          return ImageResult.Ok(OpenOriginal(source.Path), formats.GetContentType(source.Format));
-        }
-        catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
-        {
-          catalog.Invalidate(listing.CollectionName);
-          continue;
-        }
-      }
-
-      var target = request.Format ?? source.Format;
-      var stream = await cache.GetOrCreateAsync(
-        CacheKey(source, file, request, target),
-        (outputPath, token) => processor.ProcessAsync(source, request, outputPath, token),
-        cancellationToken);
-      return ImageResult.Ok(stream, formats.GetContentType(target));
     }
 
     return ImageResult.Unavailable("No image could be read from the collection right now, try again.");
+  }
+
+  // Returns null when the picked file vanished and the caller should try again.
+  private async Task<ImageResult?> TryGetRandomImageAsync(ImageRequest request, CancellationToken cancellationToken)
+  {
+    var listing = catalog.GetImages(request.Collection);
+    if (listing.Status == CatalogStatus.UnknownCollection)
+    {
+      return ImageResult.NotFound($"Collection '{request.Collection}' does not exist.");
+    }
+
+    if (listing.Status == CatalogStatus.Empty)
+    {
+      return ImageResult.NotFound($"Collection '{listing.CollectionName}' contains no images.");
+    }
+
+    var source = picker.Pick(listing.Images);
+    FileInfo file = new(source.Path);
+    if (!file.Exists)
+    {
+      // The listing is stale (file removed within the listing cache time): rescan and pick again.
+      catalog.Invalidate(listing.CollectionName);
+      return null;
+    }
+
+    if (request.IsPassThrough)
+    {
+      try
+      {
+        return ImageResult.Ok(OpenOriginal(source.Path), formats.GetContentType(source.Format));
+      }
+      catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
+      {
+        catalog.Invalidate(listing.CollectionName);
+        return null;
+      }
+    }
+
+    var target = request.Format ?? source.Format;
+    var stream = await cache.GetOrCreateAsync(
+      CacheKey(source, file, request, target),
+      (outputPath, token) => processor.ProcessAsync(source, request, outputPath, token),
+      cancellationToken);
+    return ImageResult.Ok(stream, formats.GetContentType(target));
   }
 
   private static FileStream OpenOriginal(string path) => new(

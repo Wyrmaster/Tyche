@@ -7,6 +7,28 @@ public sealed class ImageApiOptionsValidator : IValidateOptions<ImageApiOptions>
   public ValidateOptionsResult Validate(string? name, ImageApiOptions options)
   {
     var failures = new List<string>();
+
+    AddCollectionFailures(failures, options);
+    AddDefaultCollectionFailures(failures, options);
+
+    RequirePositive(failures, nameof(options.MaxDimension), options.MaxDimension);
+    RequirePositive(failures, nameof(options.CacheMaxSizeMb), options.CacheMaxSizeMb);
+    RequirePositive(failures, nameof(options.ProcessTimeoutSeconds), options.ProcessTimeoutSeconds);
+    RequirePositive(failures, nameof(options.MaxConcurrentProcesses), options.MaxConcurrentProcesses);
+    RequirePositive(failures, nameof(options.ListingCacheSeconds), options.ListingCacheSeconds);
+
+    if (string.IsNullOrWhiteSpace(options.MagickPath))
+    {
+      failures.Add($"{ImageApiOptions.SectionName}:MagickPath is empty.");
+    }
+
+    AddCachePathFailures(failures, options);
+
+    return failures.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(failures);
+  }
+
+  private static void AddCollectionFailures(List<string> failures, ImageApiOptions options)
+  {
     var section = ImageApiOptions.SectionName;
 
     if (options.Collections.Count == 0)
@@ -30,6 +52,11 @@ public sealed class ImageApiOptionsValidator : IValidateOptions<ImageApiOptions>
         failures.Add($"{section}:Collections:{collectionName}: folder '{folder}' is not readable.");
       }
     }
+  }
+
+  private static void AddDefaultCollectionFailures(List<string> failures, ImageApiOptions options)
+  {
+    var section = ImageApiOptions.SectionName;
 
     if (string.IsNullOrWhiteSpace(options.DefaultCollection))
     {
@@ -40,17 +67,11 @@ public sealed class ImageApiOptionsValidator : IValidateOptions<ImageApiOptions>
       failures.Add($"{section}:DefaultCollection '{options.DefaultCollection}' is not one of the configured "
         + $"collections ({string.Join(", ", options.Collections.Keys)}).");
     }
+  }
 
-    RequirePositive(failures, nameof(options.MaxDimension), options.MaxDimension);
-    RequirePositive(failures, nameof(options.CacheMaxSizeMb), options.CacheMaxSizeMb);
-    RequirePositive(failures, nameof(options.ProcessTimeoutSeconds), options.ProcessTimeoutSeconds);
-    RequirePositive(failures, nameof(options.MaxConcurrentProcesses), options.MaxConcurrentProcesses);
-    RequirePositive(failures, nameof(options.ListingCacheSeconds), options.ListingCacheSeconds);
-
-    if (string.IsNullOrWhiteSpace(options.MagickPath))
-    {
-      failures.Add($"{section}:MagickPath is empty.");
-    }
+  private static void AddCachePathFailures(List<string> failures, ImageApiOptions options)
+  {
+    var section = ImageApiOptions.SectionName;
 
     if (string.IsNullOrWhiteSpace(options.CachePath))
     {
@@ -65,8 +86,6 @@ public sealed class ImageApiOptionsValidator : IValidateOptions<ImageApiOptions>
     {
       failures.Add($"{section}:CachePath '{options.CachePath}' is not usable: {reason}");
     }
-
-    return failures.Count == 0 ? ValidateOptionsResult.Success : ValidateOptionsResult.Fail(failures);
   }
 
   private static void RequirePositive(List<string> failures, string key, int value)

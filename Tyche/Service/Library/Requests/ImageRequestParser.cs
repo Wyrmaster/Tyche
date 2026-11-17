@@ -32,35 +32,8 @@ public sealed class ImageRequestParser : IImageRequestParser
     var parsedHeight = ParsePositive(height, "height", problems);
     var parsedDpi = ParsePositive(dpi, "dpi", problems) ?? BaseDpi;
 
-    var parsedMode = ResizeMode.Fit;
-    if (!string.IsNullOrEmpty(mode))
-    {
-      if (mode.Equals("fit", StringComparison.OrdinalIgnoreCase))
-      {
-        parsedMode = ResizeMode.Fit;
-      }
-      else if (mode.Equals("fill", StringComparison.OrdinalIgnoreCase))
-      {
-        parsedMode = ResizeMode.Fill;
-      }
-      else
-      {
-        problems["mode"] = ["mode must be 'fit' or 'fill'."];
-      }
-    }
-
-    ImageFormat? parsedFormat = null;
-    if (!string.IsNullOrEmpty(format))
-    {
-      if (formats.TryParse(format, out var known))
-      {
-        parsedFormat = known;
-      }
-      else
-      {
-        problems["format"] = ["format must be one of jpg, png, webp, gif."];
-      }
-    }
+    var parsedMode = ParseMode(mode, problems);
+    var parsedFormat = ParseFormat(format, problems);
 
     if (parsedMode == ResizeMode.Fill && !problems.ContainsKey("mode")
       && (string.IsNullOrEmpty(width) || string.IsNullOrEmpty(height)))
@@ -79,6 +52,38 @@ public sealed class ImageRequestParser : IImageRequestParser
     var collectionName = string.IsNullOrEmpty(collection) ? null : collection;
     var request = new ImageRequest(collectionName, outputWidth, outputHeight, parsedDpi, parsedMode, parsedFormat);
     return new ImageRequestParseResult(request, problems);
+  }
+
+  private static ResizeMode ParseMode(string? mode, Dictionary<string, string[]> problems)
+  {
+    if (string.IsNullOrEmpty(mode) || mode.Equals("fit", StringComparison.OrdinalIgnoreCase))
+    {
+      return ResizeMode.Fit;
+    }
+
+    if (mode.Equals("fill", StringComparison.OrdinalIgnoreCase))
+    {
+      return ResizeMode.Fill;
+    }
+
+    problems["mode"] = ["mode must be 'fit' or 'fill'."];
+    return ResizeMode.Fit;
+  }
+
+  private ImageFormat? ParseFormat(string? format, Dictionary<string, string[]> problems)
+  {
+    if (string.IsNullOrEmpty(format))
+    {
+      return null;
+    }
+
+    if (formats.TryParse(format, out var known))
+    {
+      return known;
+    }
+
+    problems["format"] = ["format must be one of jpg, png, webp, gif."];
+    return null;
   }
 
   private static int? ParsePositive(string? value, string name, Dictionary<string, string[]> problems)
