@@ -4,7 +4,7 @@ namespace Tyche.Service.Test.Unit;
 
 public class ImageFormatMapTests
 {
-  private readonly ImageFormatMap map = new();
+  private readonly ImageFormatMap _map = new();
 
   [Theory]
   [InlineData("jpg", ImageFormat.Jpg)]
@@ -14,7 +14,7 @@ public class ImageFormatMapTests
   [InlineData("GIF", ImageFormat.Gif)]
   public void Extension_maps_case_insensitive(string extension, ImageFormat expected)
   {
-    Assert.True(map.TryFromExtension(extension, out var format));
+    Assert.True(_map.TryFromExtension(extension, out var format));
     Assert.Equal(expected, format);
   }
 
@@ -24,7 +24,7 @@ public class ImageFormatMapTests
   [InlineData("txt")]
   public void Unknown_extension_is_rejected(string extension)
   {
-    Assert.False(map.TryFromExtension(extension, out _));
+    Assert.False(_map.TryFromExtension(extension, out _));
   }
 
   [Theory]
@@ -34,15 +34,15 @@ public class ImageFormatMapTests
   [InlineData(ImageFormat.Gif, "image/gif")]
   public void Content_types(ImageFormat format, string expected)
   {
-    Assert.Equal(expected, map.GetContentType(format));
+    Assert.Equal(expected, _map.GetContentType(format));
   }
 
   [Fact]
   public void Only_gif_and_webp_animate()
   {
-    Assert.True(map.CanAnimate(ImageFormat.Gif));
-    Assert.True(map.CanAnimate(ImageFormat.Webp));
-    Assert.False(map.CanAnimate(ImageFormat.Jpg));
-    Assert.False(map.CanAnimate(ImageFormat.Png));
+    Assert.True(_map.CanAnimate(ImageFormat.Gif));
+    Assert.True(_map.CanAnimate(ImageFormat.Webp));
+    Assert.False(_map.CanAnimate(ImageFormat.Jpg));
+    Assert.False(_map.CanAnimate(ImageFormat.Png));
   }
 }

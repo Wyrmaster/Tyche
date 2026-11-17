@@ -5,7 +5,7 @@ namespace Tyche.Service.Test.Unit;
 
 public class ImageApiOptionsValidatorTests
 {
-  private readonly ImageApiOptionsValidator validator = new();
+  private readonly ImageApiOptionsValidator _validator = new();
 
   private static ImageApiOptions Valid(TempFolder temp) => new()
   {
@@ -31,7 +31,7 @@ public class ImageApiOptionsValidatorTests
   public void Valid_options_pass()
   {
     using var temp = new TempFolder();
-    Assert.True(validator.Validate(null, Valid(temp)).Succeeded);
+    Assert.True(_validator.Validate(null, Valid(temp)).Succeeded);
   }
 
   [Fact]
@@ -41,7 +41,7 @@ public class ImageApiOptionsValidatorTests
     var options = Valid(temp);
     options.Collections.Clear();
 
-    var result = validator.Validate(null, options);
+    var result = _validator.Validate(null, options);
 
     Assert.True(result.Failed);
     Assert.Contains(result.Failures!, failure => failure.Contains("Collections is empty"));
@@ -54,7 +54,7 @@ public class ImageApiOptionsValidatorTests
     var options = Valid(temp);
     options.DefaultCollection = "other";
 
-    var result = validator.Validate(null, options);
+    var result = _validator.Validate(null, options);
 
     Assert.Contains(result.Failures!, failure => failure.Contains("DefaultCollection 'other'"));
   }
@@ -66,7 +66,7 @@ public class ImageApiOptionsValidatorTests
     var options = Valid(temp);
     options.DefaultCollection = null;
 
-    Assert.Contains(validator.Validate(null, options).Failures!, failure => failure.Contains("not set"));
+    Assert.Contains(_validator.Validate(null, options).Failures!, failure => failure.Contains("not set"));
   }
 
   [Fact]
@@ -76,7 +76,7 @@ public class ImageApiOptionsValidatorTests
     var options = Valid(temp);
     options.Collections["gone"] = temp.Combine("does-not-exist");
 
-    var result = validator.Validate(null, options);
+    var result = _validator.Validate(null, options);
 
     Assert.Contains(result.Failures!, failure => failure.Contains("does-not-exist") && failure.Contains("gone"));
   }
@@ -92,7 +92,7 @@ public class ImageApiOptionsValidatorTests
     options.MaxConcurrentProcesses = 0;
     options.ListingCacheSeconds = 0;
 
-    Assert.Equal(5, validator.Validate(null, options).Failures!.Count());
+    Assert.Equal(5, _validator.Validate(null, options).Failures!.Count());
   }
 
   [Fact]
@@ -102,7 +102,7 @@ public class ImageApiOptionsValidatorTests
     var options = Valid(temp);
     options.CachePath = temp.Combine("cache%d");
 
-    Assert.Contains(validator.Validate(null, options).Failures!, failure => failure.Contains("'%'"));
+    Assert.Contains(_validator.Validate(null, options).Failures!, failure => failure.Contains("'%'"));
   }
 
   [Fact]
@@ -112,7 +112,7 @@ public class ImageApiOptionsValidatorTests
     var options = Valid(temp);
     options.CachePath = temp.Combine("new", "cache");
 
-    Assert.True(validator.Validate(null, options).Succeeded);
+    Assert.True(_validator.Validate(null, options).Succeeded);
     Assert.True(Directory.Exists(options.CachePath));
   }
 }

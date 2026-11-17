@@ -6,12 +6,12 @@ namespace Tyche.Service.Test.Unit;
 
 public class ImageRequestParserTests
 {
-  private readonly ImageRequestParser parser = new(OptionsFactory.Create(), new ImageFormatMap());
+  private readonly ImageRequestParser _parser = new(OptionsFactory.Create(), new ImageFormatMap());
 
   [Fact]
   public void No_parameters_is_a_pass_through_request()
   {
-    var result = parser.Parse(null, null, null, null, null, null);
+    var result = _parser.Parse(null, null, null, null, null, null);
 
     Assert.True(result.IsValid);
     Assert.True(result.Request!.IsPassThrough);
@@ -22,13 +22,13 @@ public class ImageRequestParserTests
   [Fact]
   public void Dpi_and_mode_alone_stay_pass_through()
   {
-    Assert.True(parser.Parse(null, null, null, "192", "fit", null).Request!.IsPassThrough);
+    Assert.True(_parser.Parse(null, null, null, "192", "fit", null).Request!.IsPassThrough);
   }
 
   [Fact]
   public void Format_alone_is_not_pass_through()
   {
-    var request = parser.Parse(null, null, null, null, null, "webp").Request!;
+    var request = _parser.Parse(null, null, null, null, null, "webp").Request!;
 
     Assert.False(request.IsPassThrough);
     Assert.Equal(ImageFormat.Webp, request.Format);
@@ -42,7 +42,7 @@ public class ImageRequestParserTests
   [InlineData("1", "1", "96", 1, 1)]
   public void Sizes_are_scaled_by_dpi_and_rounded(string? width, string? height, string? dpi, int? w, int? h)
   {
-    var request = parser.Parse(null, width, height, dpi, null, null).Request!;
+    var request = _parser.Parse(null, width, height, dpi, null, null).Request!;
 
     Assert.Equal(w, request.Width);
     Assert.Equal(h, request.Height);
@@ -61,7 +61,7 @@ public class ImageRequestParserTests
   [InlineData("dpi", "fast")]
   public void Non_numeric_or_non_positive_values_are_rejected(string name, string value)
   {
-    var result = parser.Parse(
+    var result = _parser.Parse(
       null,
       name == "width" ? value : "100",
       name == "height" ? value : "100",
@@ -85,7 +85,7 @@ public class ImageRequestParserTests
   [InlineData("2147483647", "2147483647", "2147483647", false)]
   public void Scaled_size_above_the_maximum_is_rejected(string? width, string? height, string? dpi, bool valid)
   {
-    Assert.Equal(valid, parser.Parse(null, width, height, dpi, null, null).IsValid);
+    Assert.Equal(valid, _parser.Parse(null, width, height, dpi, null, null).IsValid);
   }
 
   [Fact]
@@ -100,7 +100,7 @@ public class ImageRequestParserTests
   [Fact]
   public void Size_that_scales_below_one_pixel_is_rejected()
   {
-    Assert.False(parser.Parse(null, "1", null, "1", null, null).IsValid);
+    Assert.False(_parser.Parse(null, "1", null, "1", null, null).IsValid);
   }
 
   [Theory]
@@ -111,13 +111,13 @@ public class ImageRequestParserTests
   [InlineData("", "100", "100", true)]
   public void Mode_rules(string mode, string? width, string? height, bool valid = false)
   {
-    Assert.Equal(valid, parser.Parse(null, width, height, null, mode, null).IsValid);
+    Assert.Equal(valid, _parser.Parse(null, width, height, null, mode, null).IsValid);
   }
 
   [Fact]
   public void Fill_with_both_sizes_is_valid_and_mode_is_case_insensitive()
   {
-    var request = parser.Parse(null, "300", "200", null, "FILL", null).Request!;
+    var request = _parser.Parse(null, "300", "200", null, "FILL", null).Request!;
 
     Assert.Equal(ResizeMode.Fill, request.Mode);
     Assert.Equal((300, 200), (request.Width, request.Height));
@@ -131,7 +131,7 @@ public class ImageRequestParserTests
   [InlineData("gif", ImageFormat.Gif)]
   public void Supported_formats(string format, ImageFormat expected)
   {
-    Assert.Equal(expected, parser.Parse(null, null, null, null, null, format).Request!.Format);
+    Assert.Equal(expected, _parser.Parse(null, null, null, null, null, format).Request!.Format);
   }
 
   [Theory]
@@ -141,7 +141,7 @@ public class ImageRequestParserTests
   [InlineData("png;rm")]
   public void Unsupported_format_is_rejected(string format)
   {
-    var result = parser.Parse(null, null, null, null, null, format);
+    var result = _parser.Parse(null, null, null, null, null, format);
 
     Assert.False(result.IsValid);
     Assert.Contains("format", result.Problems.Keys);
@@ -150,7 +150,7 @@ public class ImageRequestParserTests
   [Fact]
   public void Several_problems_are_reported_together()
   {
-    var result = parser.Parse(null, "x", "y", null, "zoom", "bmp");
+    var result = _parser.Parse(null, "x", "y", null, "zoom", "bmp");
 
     Assert.Equal(4, result.Problems.Count);
   }
@@ -158,7 +158,7 @@ public class ImageRequestParserTests
   [Fact]
   public void Collection_is_passed_through_as_name_only()
   {
-    Assert.Equal("nature", parser.Parse("nature", null, null, null, null, null).Request!.Collection);
-    Assert.Null(parser.Parse("", null, null, null, null, null).Request!.Collection);
+    Assert.Equal("nature", _parser.Parse("nature", null, null, null, null, null).Request!.Collection);
+    Assert.Null(_parser.Parse("", null, null, null, null, null).Request!.Collection);
   }
 }

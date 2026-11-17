@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tyche.Service.Configuration;
 
@@ -8,22 +7,22 @@ public class DiskImageCache : IImageCache
 {
   private const string TempExtension = ".tmp";
 
-  private readonly string folder;
-  private readonly long maxBytes;
-  private readonly TimeProvider time;
-  private readonly ILogger<DiskImageCache> logger;
-  private readonly Dictionary<string, KeyLock> locks = new();
-  private readonly SemaphoreSlim eviction = new(1, 1);
+  private readonly string _folder;
+  private readonly long _maxBytes;
+  private readonly TimeProvider _time;
+  private readonly ILogger<DiskImageCache> _logger;
+  private readonly Dictionary<string, KeyLock> _locks = new();
+  private readonly SemaphoreSlim _eviction = new(1, 1);
 
   public DiskImageCache(IOptions<ImageApiOptions> options, TimeProvider time, ILogger<DiskImageCache> logger)
   {
-    folder = Path.GetFullPath(options.Value.CachePath);
-    maxBytes = options.Value.CacheMaxSizeMb * 1024L * 1024L;
-    this.time = time;
-    this.logger = logger;
+    _folder = Path.GetFullPath(options.Value.CachePath);
+    _maxBytes = options.Value.CacheMaxSizeMb * 1024L * 1024L;
+    _time = time;
+    _logger = logger;
 
-    Directory.CreateDirectory(folder);
-    Directory.CreateDirectory(MagickTemporaryFolder(folder));
+    Directory.CreateDirectory(_folder);
+    Directory.CreateDirectory(MagickTemporaryFolder(_folder));
     DeleteTempFiles();
   }
 
@@ -52,14 +51,14 @@ public class DiskImageCache : IImageCache
         return hit;
       }
 
-      var temp = Path.Combine(folder, $"{Guid.NewGuid():N}{TempExtension}");
+      var temp = Path.Combine(_folder, $"{Guid.NewGuid():N}{TempExtension}");
       try
       {
         await create(temp, cancellationToken);
 
         // Move, touch, open and evict under one guard: a concurrent eviction cannot delete the
         // just-written file before it is open, and a new entry larger than the limit is still served.
-        await eviction.WaitAsync(cancellationToken);
+        await _eviction.WaitAsync(cancellationToken);
         try
         {
           File.Move(temp, path, overwrite: true);
@@ -70,7 +69,7 @@ public class DiskImageCache : IImageCache
         }
         finally
         {
-          eviction.Release();
+          _eviction.Release();
         }
       }
       finally
@@ -88,12 +87,12 @@ public class DiskImageCache : IImageCache
     }
   }
 
-  private string PathFor(string key) => Path.Combine(folder, key);
+  private string PathFor(string key) => Path.Combine(_folder, key);
 
   /// <summary>Marks the entry as just used (LRU). A failure here must never fail a request.</summary>
   protected virtual void SetLastUse(string path)
   {
-    File.SetLastWriteTimeUtc(path, time.GetUtcNow().UtcDateTime);
+    File.SetLastWriteTimeUtc(path, _time.GetUtcNow().UtcDateTime);
   }
 
   private FileStream? TryOpen(string path)
@@ -121,7 +120,7 @@ public class DiskImageCache : IImageCache
     }
     catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
     {
-      logger.LogWarning(exception, "Could not update the last use of cache file {File}", Path.GetFileName(path));
+      _logger.LogWarning(exception, "Could not update the last use of cache file {File}", Path.GetFileName(path));
     }
   }
 
@@ -135,20 +134,20 @@ public class DiskImageCache : IImageCache
 
   private void Evict(string keep)
   {
-    var files = new DirectoryInfo(folder)
+    var files = new DirectoryInfo(_folder)
       .EnumerateFiles()
       .Where(file => file.Extension != TempExtension)
       .ToList();
 
     var total = files.Sum(file => file.Length);
-    if (total <= maxBytes)
+    if (total <= _maxBytes)
     {
       return;
     }
 
     foreach (var file in files.Where(file => file.FullName != keep).OrderBy(file => file.LastWriteTimeUtc))
     {
-      if (total <= maxBytes)
+      if (total <= _maxBytes)
       {
         break;
       }
@@ -161,14 +160,14 @@ public class DiskImageCache : IImageCache
       }
       catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
       {
-        logger.LogWarning(exception, "Could not evict cache file {File}", file.Name);
+        _logger.LogWarning(exception, "Could not evict cache file {File}", file.Name);
       }
     }
   }
 
   private void DeleteTempFiles()
   {
-    foreach (var file in Directory.EnumerateFiles(MagickTemporaryFolder(folder)))
+    foreach (var file in Directory.EnumerateFiles(MagickTemporaryFolder(_folder)))
     {
       try
       {
@@ -176,11 +175,11 @@ public class DiskImageCache : IImageCache
       }
       catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
       {
-        logger.LogWarning(exception, "Could not delete leftover ImageMagick file {File}", file);
+        _logger.LogWarning(exception, "Could not delete leftover ImageMagick file {File}", file);
       }
     }
 
-    foreach (var file in Directory.EnumerateFiles(folder, $"*{TempExtension}"))
+    foreach (var file in Directory.EnumerateFiles(_folder, $"*{TempExtension}"))
     {
       try
       {
@@ -188,19 +187,19 @@ public class DiskImageCache : IImageCache
       }
       catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
       {
-        logger.LogWarning(exception, "Could not delete leftover temp file {File}", file);
+        _logger.LogWarning(exception, "Could not delete leftover temp file {File}", file);
       }
     }
   }
 
   private KeyLock Acquire(string key)
   {
-    lock (locks)
+    lock (_locks)
     {
-      if (!locks.TryGetValue(key, out var keyLock))
+      if (!_locks.TryGetValue(key, out var keyLock))
       {
         keyLock = new KeyLock();
-        locks[key] = keyLock;
+        _locks[key] = keyLock;
       }
 
       keyLock.Users++;
@@ -210,11 +209,11 @@ public class DiskImageCache : IImageCache
 
   private void Release(string key, KeyLock keyLock)
   {
-    lock (locks)
+    lock (_locks)
     {
       if (--keyLock.Users == 0)
       {
-        locks.Remove(key);
+        _locks.Remove(key);
       }
     }
   }

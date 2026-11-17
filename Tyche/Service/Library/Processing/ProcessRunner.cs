@@ -27,7 +27,8 @@ public sealed class ProcessRunner : IProcessRunner
       startInfo.ArgumentList.Add(argument);
     }
 
-    using var process = new Process { StartInfo = startInfo };
+    using var process = new Process();
+    process.StartInfo = startInfo;
     try
     {
       process.Start();

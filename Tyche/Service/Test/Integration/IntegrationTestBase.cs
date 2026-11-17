@@ -4,24 +4,24 @@ namespace Tyche.Service.Test.Integration;
 
 public abstract class IntegrationTestBase : IDisposable
 {
-  private ImageApiFactory? factory;
-  private HttpClient? client;
+  private ImageApiFactory? _factory;
+  private HttpClient? _client;
 
   protected TempFolder Temp { get; } = new();
 
   protected string Nature => Temp.Sub("nature");
 
-  protected ImageApiFactory Factory => factory ?? throw new InvalidOperationException("Call Start first.");
+  protected ImageApiFactory Factory => _factory ?? throw new InvalidOperationException("Call Start first.");
 
-  protected HttpClient Client => client ?? throw new InvalidOperationException("Call Start first.");
+  protected HttpClient Client => _client ?? throw new InvalidOperationException("Call Start first.");
 
   protected ImageApiFactory Prepare(params (string Name, string Folder)[] collections)
-    => factory = new ImageApiFactory(Temp, collections);
+    => _factory = new ImageApiFactory(Temp, collections);
 
   protected HttpClient Start(params (string Name, string Folder)[] collections)
   {
-    var created = factory ?? Prepare(collections.Length == 0 ? [("nature", Nature)] : collections);
-    return client = created.CreateClient();
+    var created = _factory ?? Prepare(collections.Length == 0 ? [("nature", Nature)] : collections);
+    return _client = created.CreateClient();
   }
 
   protected async Task<(HttpResponseMessage Response, byte[] Body)> GetAsync(string url)
@@ -32,8 +32,8 @@ public abstract class IntegrationTestBase : IDisposable
 
   public void Dispose()
   {
-    client?.Dispose();
-    factory?.Dispose();
+    _client?.Dispose();
+    _factory?.Dispose();
     Temp.Dispose();
   }
 }

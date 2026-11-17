@@ -8,7 +8,7 @@ namespace Tyche.Service.Test.Unit;
 
 public class MagickArgumentBuilderTests
 {
-  private readonly MagickArgumentBuilder builder = new(OptionsFactory.Create(), new ImageFormatMap());
+  private readonly MagickArgumentBuilder _builder = new(OptionsFactory.Create(), new ImageFormatMap());
 
   private static ImageRequest Request(
     int? width = null,
@@ -18,7 +18,7 @@ public class MagickArgumentBuilderTests
     => new(null, width, height, 96, mode, format);
 
   private IReadOnlyList<string> Build(ImageFormat source, ImageRequest request)
-    => builder.Build(new CatalogImage("/img/in." + source.ToString().ToLowerInvariant(), source), request, "/cache/out.tmp");
+    => _builder.Build(new CatalogImage("/img/in." + source.ToString().ToLowerInvariant(), source), request, "/cache/out.tmp");
 
   [Fact]
   public void Fit_with_both_sizes_only_shrinks()
@@ -58,7 +58,7 @@ public class MagickArgumentBuilderTests
   {
     var source = new CatalogImage("/img/100%d.jpg", ImageFormat.Jpg);
 
-    var args = builder.Build(source, Request(100), "/cache/out.tmp");
+    var args = _builder.Build(source, Request(100), "/cache/out.tmp");
 
     Assert.Contains("jpeg:/img/100%%d.jpg[0]", args);
   }
@@ -68,7 +68,7 @@ public class MagickArgumentBuilderTests
   {
     var source = new CatalogImage("/img/100%%d.jpg", ImageFormat.Jpg);
 
-    var args = builder.Build(source, Request(100), "/cache/out.tmp");
+    var args = _builder.Build(source, Request(100), "/cache/out.tmp");
 
     Assert.Contains("jpeg:/img/100%%%%d.jpg[0]", args);
   }
@@ -150,7 +150,7 @@ public class MagickArgumentBuilderTests
   {
     var source = new CatalogImage("/img/a b; rm -rf %d [x] $(id).jpg", ImageFormat.Jpg);
 
-    var args = builder.Build(source, Request(100), "/cache/out.tmp");
+    var args = _builder.Build(source, Request(100), "/cache/out.tmp");
 
     Assert.Contains("jpeg:/img/a b; rm -rf %%d [x] $(id).jpg[0]", args);
   }

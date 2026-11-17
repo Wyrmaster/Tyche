@@ -4,8 +4,8 @@ namespace Tyche.Service.Test.Support;
 
 public sealed class FakeProcessRunner : IProcessRunner
 {
-  private int running;
-  private int maxRunning;
+  private int _running;
+  private int _maxRunning;
 
   public List<IReadOnlyList<string>> Calls { get; } = [];
 
@@ -13,7 +13,7 @@ public sealed class FakeProcessRunner : IProcessRunner
 
   public int ExitCode { get; set; }
 
-  public int MaxConcurrent => maxRunning;
+  public int MaxConcurrent => _maxRunning;
 
   public async Task<ProcessResult> RunAsync(
     string program,
@@ -26,11 +26,11 @@ public sealed class FakeProcessRunner : IProcessRunner
       Calls.Add(arguments);
     }
 
-    var now = Interlocked.Increment(ref running);
+    var now = Interlocked.Increment(ref _running);
     int seen;
-    while (now > (seen = maxRunning))
+    while (now > (seen = _maxRunning))
     {
-      Interlocked.CompareExchange(ref maxRunning, now, seen);
+      Interlocked.CompareExchange(ref _maxRunning, now, seen);
     }
 
     try
@@ -40,7 +40,7 @@ public sealed class FakeProcessRunner : IProcessRunner
     }
     finally
     {
-      Interlocked.Decrement(ref running);
+      Interlocked.Decrement(ref _running);
     }
   }
 }

@@ -71,6 +71,7 @@ docker build -f Tyche/Service/Library/Dockerfile --build-arg VERSION=1.0.1 --bui
 
 ```
 dotnet build
+./inspectcode.sh  # Rider/ReSharper inspections (warnings and errors fail); complexity limits are checked by dotnet build
 dotnet test      # needs ImageMagick 7 (`magick`); the integration tests are skipped without it (not with REQUIRE_MAGICK=1 or CI=true)
 docker build -f Tyche/Service/Library/Dockerfile --target test .   # runs all tests on Alpine with ImageMagick
 ```

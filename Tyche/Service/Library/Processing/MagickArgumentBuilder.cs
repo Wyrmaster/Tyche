@@ -12,19 +12,19 @@ public sealed class MagickArgumentBuilder : IMagickArgumentBuilder
 {
   private const int Quality = 85;
 
-  private readonly ImageApiOptions options;
-  private readonly IImageFormatMap formats;
+  private readonly ImageApiOptions _options;
+  private readonly IImageFormatMap _formats;
 
   public MagickArgumentBuilder(IOptions<ImageApiOptions> options, IImageFormatMap formats)
   {
-    this.options = options.Value;
-    this.formats = formats;
+    _options = options.Value;
+    _formats = formats;
   }
 
   public IReadOnlyList<string> Build(CatalogImage source, ImageRequest request, string outputPath)
   {
     var target = request.Format ?? source.Format;
-    var animated = formats.CanAnimate(source.Format) && formats.CanAnimate(target);
+    var animated = _formats.CanAnimate(source.Format) && _formats.CanAnimate(target);
 
     var arguments = new List<string>
     {
@@ -34,14 +34,14 @@ public sealed class MagickArgumentBuilder : IMagickArgumentBuilder
       "-limit", "area", "128MP",
       "-limit", "width", "32KP",
       "-limit", "height", "32KP",
-      "-define", $"registry:temporary-path={DiskImageCache.MagickTemporaryFolder(options.CachePath)}",
-      "-limit", "time", options.ProcessTimeoutSeconds.ToString(CultureInfo.InvariantCulture),
+      "-define", $"registry:temporary-path={DiskImageCache.MagickTemporaryFolder(_options.CachePath)}",
+      "-limit", "time", _options.ProcessTimeoutSeconds.ToString(CultureInfo.InvariantCulture),
     };
 
     // The explicit coder prefix makes ImageMagick read the file as the format its extension claims,
     // instead of guessing from the content. [0] selects the first frame unless the animation is kept.
     // A literal % is doubled, otherwise ImageMagick reads a name like 100%d.png as a scene pattern.
-    var input = $"{formats.GetMagickCoder(source.Format)}:{source.Path.Replace("%", "%%")}";
+    var input = $"{_formats.GetMagickCoder(source.Format)}:{source.Path.Replace("%", "%%")}";
     arguments.Add(animated ? input : $"{input}[0]");
 
     if (animated)
@@ -64,7 +64,7 @@ public sealed class MagickArgumentBuilder : IMagickArgumentBuilder
 
     AddOutputOptions(arguments, target, animated);
 
-    arguments.Add($"{formats.GetMagickCoder(target)}:{outputPath}");
+    arguments.Add($"{_formats.GetMagickCoder(target)}:{outputPath}");
     return arguments;
   }
 

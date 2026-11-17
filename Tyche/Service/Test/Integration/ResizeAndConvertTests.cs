@@ -5,11 +5,10 @@ namespace Tyche.Service.Test.Integration;
 
 public class ResizeAndConvertTests : IntegrationTestBase
 {
-  private string Single(string name, int width, int height)
+  private void Single(string name, int width, int height)
   {
-    var path = TestImages.Create(Path.Combine(Nature, name), width, height);
+    TestImages.Create(Path.Combine(Nature, name), width, height);
     Start();
-    return path;
   }
 
   private async Task<(string Format, int Width, int Height, int Frames)> Fetch(string query, string expectedType)

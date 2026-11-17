@@ -9,20 +9,20 @@ namespace Tyche.Service.Test.Support;
 
 public sealed class ImageApiFactory : WebApplicationFactory<Program>
 {
-  private readonly Dictionary<string, string?> settings = new();
+  private readonly Dictionary<string, string?> _settings = new();
 
   public ImageApiFactory(TempFolder temp, params (string Name, string Folder)[] collections)
   {
     CachePath = temp.Sub("cache");
     foreach (var (name, folder) in collections)
     {
-      settings[$"ImageApi:Collections:{name}"] = folder;
+      _settings[$"ImageApi:Collections:{name}"] = folder;
     }
 
-    settings["ImageApi:DefaultCollection"] = collections.Length > 0 ? collections[0].Name : "";
-    settings["ImageApi:CachePath"] = CachePath;
-    settings["ImageApi:ListingCacheSeconds"] = "1";
-    settings["ImageApi:MaxConcurrentProcesses"] = "2";
+    _settings["ImageApi:DefaultCollection"] = collections.Length > 0 ? collections[0].Name : "";
+    _settings["ImageApi:CachePath"] = CachePath;
+    _settings["ImageApi:ListingCacheSeconds"] = "1";
+    _settings["ImageApi:MaxConcurrentProcesses"] = "2";
   }
 
   public string CachePath { get; }
@@ -31,13 +31,13 @@ public sealed class ImageApiFactory : WebApplicationFactory<Program>
 
   public ImageApiFactory With(string key, string value)
   {
-    settings[$"ImageApi:{key}"] = value;
+    _settings[$"ImageApi:{key}"] = value;
     return this;
   }
 
   protected override void ConfigureWebHost(IWebHostBuilder builder)
   {
-    builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(settings));
+    builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(_settings));
     builder.ConfigureServices(services =>
     {
       services.RemoveAll<IProcessRunner>();

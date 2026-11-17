@@ -13,11 +13,11 @@ public sealed class ImageService : IImageService
 {
   private const int MaxAttempts = 3;
 
-  private readonly ICollectionCatalog catalog;
-  private readonly IRandomImagePicker picker;
-  private readonly IImageFormatMap formats;
-  private readonly IImageProcessor processor;
-  private readonly IImageCache cache;
+  private readonly ICollectionCatalog _catalog;
+  private readonly IRandomImagePicker _picker;
+  private readonly IImageFormatMap _formats;
+  private readonly IImageProcessor _processor;
+  private readonly IImageCache _cache;
 
   public ImageService(
     ICollectionCatalog catalog,
@@ -26,11 +26,11 @@ public sealed class ImageService : IImageService
     IImageProcessor processor,
     IImageCache cache)
   {
-    this.catalog = catalog;
-    this.picker = picker;
-    this.formats = formats;
-    this.processor = processor;
-    this.cache = cache;
+    _catalog = catalog;
+    _picker = picker;
+    _formats = formats;
+    _processor = processor;
+    _cache = cache;
   }
 
   public async Task<ImageResult> GetRandomImageAsync(ImageRequest request, CancellationToken cancellationToken)
@@ -50,7 +50,7 @@ public sealed class ImageService : IImageService
   // Returns null when the picked file vanished and the caller should try again.
   private async Task<ImageResult?> TryGetRandomImageAsync(ImageRequest request, CancellationToken cancellationToken)
   {
-    var listing = catalog.GetImages(request.Collection);
+    var listing = _catalog.GetImages(request.Collection);
     if (listing.Status == CatalogStatus.UnknownCollection)
     {
       return ImageResult.NotFound($"Collection '{request.Collection}' does not exist.");
@@ -61,12 +61,12 @@ public sealed class ImageService : IImageService
       return ImageResult.NotFound($"Collection '{listing.CollectionName}' contains no images.");
     }
 
-    var source = picker.Pick(listing.Images);
+    var source = _picker.Pick(listing.Images);
     FileInfo file = new(source.Path);
     if (!file.Exists)
     {
       // The listing is stale (file removed within the listing cache time): rescan and pick again.
-      catalog.Invalidate(listing.CollectionName);
+      _catalog.Invalidate(listing.CollectionName);
       return null;
     }
 
@@ -74,21 +74,21 @@ public sealed class ImageService : IImageService
     {
       try
       {
-        return ImageResult.Ok(OpenOriginal(source.Path), formats.GetContentType(source.Format));
+        return ImageResult.Ok(OpenOriginal(source.Path), _formats.GetContentType(source.Format));
       }
       catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
       {
-        catalog.Invalidate(listing.CollectionName);
+        _catalog.Invalidate(listing.CollectionName);
         return null;
       }
     }
 
     var target = request.Format ?? source.Format;
-    var stream = await cache.GetOrCreateAsync(
+    var stream = await _cache.GetOrCreateAsync(
       CacheKey(source, file, request, target),
-      (outputPath, token) => processor.ProcessAsync(source, request, outputPath, token),
+      (outputPath, token) => _processor.ProcessAsync(source, request, outputPath, token),
       cancellationToken);
-    return ImageResult.Ok(stream, formats.GetContentType(target));
+    return ImageResult.Ok(stream, _formats.GetContentType(target));
   }
 
   private static FileStream OpenOriginal(string path) => new(

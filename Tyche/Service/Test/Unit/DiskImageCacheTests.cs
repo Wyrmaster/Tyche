@@ -6,18 +6,18 @@ namespace Tyche.Service.Test.Unit;
 
 public class DiskImageCacheTests : IDisposable
 {
-  private readonly TempFolder temp = new();
-  private readonly ManualTimeProvider time = new();
+  private readonly TempFolder _temp = new();
+  private readonly ManualTimeProvider _time = new();
 
-  public void Dispose() => temp.Dispose();
+  public void Dispose() => _temp.Dispose();
 
   private DiskImageCache Create(int maxMb = 500, string? folder = null) => new(
     OptionsFactory.Create(options =>
     {
-      options.CachePath = folder ?? temp.Sub("cache");
+      options.CachePath = folder ?? _temp.Sub("cache");
       options.CacheMaxSizeMb = maxMb;
     }),
-    time,
+    _time,
     NullLogger<DiskImageCache>.Instance);
 
   private static Func<string, CancellationToken, Task> Write(byte[] bytes, Action? onCall = null) => async (path, token) =>
@@ -65,7 +65,7 @@ public class DiskImageCacheTests : IDisposable
   [Fact]
   public async Task Failed_creation_leaves_no_file_and_can_be_retried()
   {
-    var folder = temp.Sub("cache");
+    var folder = _temp.Sub("cache");
     var cache = Create(folder: folder);
 
     await Assert.ThrowsAsync<InvalidOperationException>(() => cache.GetOrCreateAsync(
@@ -127,23 +127,23 @@ public class DiskImageCacheTests : IDisposable
   [Fact]
   public async Task Oldest_used_entries_are_evicted_above_the_limit()
   {
-    var folder = temp.Sub("cache");
+    var folder = _temp.Sub("cache");
     var cache = Create(maxMb: 1, folder: folder);
     var big = new byte[400 * 1024];
 
     await ReadAll(await cache.GetOrCreateAsync("a", Write(big), default));
-    time.Advance(TimeSpan.FromSeconds(1));
+    _time.Advance(TimeSpan.FromSeconds(1));
     await ReadAll(await cache.GetOrCreateAsync("b", Write(big), default));
-    time.Advance(TimeSpan.FromSeconds(1));
+    _time.Advance(TimeSpan.FromSeconds(1));
 
     // Use "a" again so "b" becomes the least recently used.
     await ReadAll(await cache.GetOrCreateAsync("a", Write(big), default));
-    time.Advance(TimeSpan.FromSeconds(1));
+    _time.Advance(TimeSpan.FromSeconds(1));
     await ReadAll(await cache.GetOrCreateAsync("c", Write(big), default));
 
     var remaining = Directory
       .GetFiles(folder)
-      .Select(file => Path.GetFileName(file)!)
+      .Select(file => Path.GetFileName(file))
       .Order()
       .ToArray();
     Assert.Equal(["a", "c"], remaining);
@@ -162,7 +162,7 @@ public class DiskImageCacheTests : IDisposable
   [Fact]
   public async Task Eviction_under_parallel_load_never_fails_or_corrupts()
   {
-    var folder = temp.Sub("cache");
+    var folder = _temp.Sub("cache");
     var cache = Create(maxMb: 1, folder: folder);
     var payload = new byte[100 * 1024];
 
@@ -206,8 +206,8 @@ public class DiskImageCacheTests : IDisposable
   [Fact]
   public async Task Failing_touch_still_returns_the_stream_on_hit_and_miss()
   {
-    var folder = temp.Sub("cache");
-    var cache = new FailingTouchCache(folder, time);
+    var folder = _temp.Sub("cache");
+    var cache = new FailingTouchCache(folder, _time);
 
     var miss = await ReadAll(await cache.GetOrCreateAsync("k", Write([4, 2]), default));
     var hit = await ReadAll(await cache.GetOrCreateAsync("k", Write([9]), default));
@@ -229,7 +229,7 @@ public class DiskImageCacheTests : IDisposable
   [Fact]
   public void Leftover_temp_files_are_removed_at_start()
   {
-    var folder = temp.Sub("cache");
+    var folder = _temp.Sub("cache");
     File.WriteAllBytes(Path.Combine(folder, "crashed.tmp"), [1]);
     File.WriteAllBytes(Path.Combine(folder, "keepme"), [1]);
     Directory.CreateDirectory(Path.Combine(folder, "tmp"));
@@ -246,7 +246,7 @@ public class DiskImageCacheTests : IDisposable
   [Fact]
   public void Cache_folder_is_created_when_missing()
   {
-    var folder = temp.Combine("a", "b");
+    var folder = _temp.Combine("a", "b");
 
     Create(folder: folder);
 

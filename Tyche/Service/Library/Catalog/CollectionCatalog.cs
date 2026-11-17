@@ -15,23 +15,23 @@ public sealed class CollectionCatalog : ICollectionCatalog
     ReturnSpecialDirectories = false,
   };
 
-  private readonly ImageApiOptions options;
-  private readonly IImageFormatMap formats;
-  private readonly TimeProvider time;
-  private readonly ConcurrentDictionary<string, Listing> listings = new(StringComparer.OrdinalIgnoreCase);
-  private readonly ConcurrentDictionary<string, object> gates = new(StringComparer.OrdinalIgnoreCase);
+  private readonly ImageApiOptions _options;
+  private readonly IImageFormatMap _formats;
+  private readonly TimeProvider _time;
+  private readonly ConcurrentDictionary<string, Listing> _listings = new(StringComparer.OrdinalIgnoreCase);
+  private readonly ConcurrentDictionary<string, object> _gates = new(StringComparer.OrdinalIgnoreCase);
 
   public CollectionCatalog(IOptions<ImageApiOptions> options, IImageFormatMap formats, TimeProvider time)
   {
-    this.options = options.Value;
-    this.formats = formats;
-    this.time = time;
+    _options = options.Value;
+    _formats = formats;
+    _time = time;
   }
 
   public CatalogResult GetImages(string? collectionName)
   {
-    var name = string.IsNullOrEmpty(collectionName) ? options.DefaultCollection : collectionName;
-    if (name is null || !options.Collections.TryGetValue(name, out var folder))
+    var name = string.IsNullOrEmpty(collectionName) ? _options.DefaultCollection : collectionName;
+    if (name is null || !_options.Collections.TryGetValue(name, out var folder))
     {
       return new CatalogResult(CatalogStatus.UnknownCollection, name ?? string.Empty, []);
     }
@@ -45,13 +45,13 @@ public sealed class CollectionCatalog : ICollectionCatalog
   // stale one; only when there is no listing at all do they wait for the rescan.
   private Listing GetListing(string name, string folder)
   {
-    var ttl = TimeSpan.FromSeconds(options.ListingCacheSeconds);
-    if (listings.TryGetValue(name, out var listing) && time.GetUtcNow() - listing.ScannedAt < ttl)
+    var ttl = TimeSpan.FromSeconds(_options.ListingCacheSeconds);
+    if (_listings.TryGetValue(name, out var listing) && _time.GetUtcNow() - listing.ScannedAt < ttl)
     {
       return listing;
     }
 
-    var gate = gates.GetOrAdd(name, _ => new object());
+    var gate = _gates.GetOrAdd(name, _ => new object());
     var taken = false;
     try
     {
@@ -68,13 +68,13 @@ public sealed class CollectionCatalog : ICollectionCatalog
         }
       }
 
-      if (listings.TryGetValue(name, out var current) && time.GetUtcNow() - current.ScannedAt < ttl)
+      if (_listings.TryGetValue(name, out var current) && _time.GetUtcNow() - current.ScannedAt < ttl)
       {
         return current;
       }
 
-      var scanned = new Listing(time.GetUtcNow(), Scan(folder));
-      listings[name] = scanned;
+      var scanned = new Listing(_time.GetUtcNow(), Scan(folder));
+      _listings[name] = scanned;
       return scanned;
     }
     finally
@@ -86,7 +86,7 @@ public sealed class CollectionCatalog : ICollectionCatalog
     }
   }
 
-  public void Invalidate(string collectionName) => listings.TryRemove(collectionName, out _);
+  public void Invalidate(string collectionName) => _listings.TryRemove(collectionName, out _);
 
   private List<CatalogImage> Scan(string folder)
   {
@@ -95,7 +95,7 @@ public sealed class CollectionCatalog : ICollectionCatalog
     {
       foreach (var file in Directory.EnumerateFiles(Path.GetFullPath(folder), "*", Enumeration))
       {
-        if (formats.TryFromExtension(Path.GetExtension(file), out var format))
+        if (_formats.TryFromExtension(Path.GetExtension(file), out var format))
         {
           images.Add(new CatalogImage(file, format));
         }

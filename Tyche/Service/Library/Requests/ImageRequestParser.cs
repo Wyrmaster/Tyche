@@ -9,13 +9,13 @@ public sealed class ImageRequestParser : IImageRequestParser
 {
   private const int BaseDpi = 96;
 
-  private readonly ImageApiOptions options;
-  private readonly IImageFormatMap formats;
+  private readonly ImageApiOptions _options;
+  private readonly IImageFormatMap _formats;
 
   public ImageRequestParser(IOptions<ImageApiOptions> options, IImageFormatMap formats)
   {
-    this.options = options.Value;
-    this.formats = formats;
+    _options = options.Value;
+    _formats = formats;
   }
 
   public ImageRequestParseResult Parse(
@@ -77,7 +77,7 @@ public sealed class ImageRequestParser : IImageRequestParser
       return null;
     }
 
-    if (formats.TryParse(format, out var known))
+    if (_formats.TryParse(format, out var known))
     {
       return known;
     }
@@ -116,9 +116,9 @@ public sealed class ImageRequestParser : IImageRequestParser
       return null;
     }
 
-    if (scaled > options.MaxDimension)
+    if (scaled > _options.MaxDimension)
     {
-      problems[name] = [$"{name} scaled by dpi is {scaled} pixels; the maximum is {options.MaxDimension}."];
+      problems[name] = [$"{name} scaled by dpi is {scaled} pixels; the maximum is {_options.MaxDimension}."];
       return null;
     }
 

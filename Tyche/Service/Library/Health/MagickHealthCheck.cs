@@ -7,13 +7,13 @@ namespace Tyche.Service.Health;
 
 public sealed class MagickHealthCheck : IHealthCheck
 {
-  private readonly ImageApiOptions options;
-  private readonly IProcessRunner runner;
+  private readonly ImageApiOptions _options;
+  private readonly IProcessRunner _runner;
 
   public MagickHealthCheck(IOptions<ImageApiOptions> options, IProcessRunner runner)
   {
-    this.options = options.Value;
-    this.runner = runner;
+    _options = options.Value;
+    _runner = runner;
   }
 
   public async Task<HealthCheckResult> CheckHealthAsync(
@@ -22,14 +22,14 @@ public sealed class MagickHealthCheck : IHealthCheck
   {
     try
     {
-      var result = await runner.RunAsync(
-        options.MagickPath,
+      var result = await _runner.RunAsync(
+        _options.MagickPath,
         ["-version"],
         TimeSpan.FromSeconds(5),
         cancellationToken);
       return result.ExitCode == 0
         ? HealthCheckResult.Healthy("ImageMagick is available.")
-        : HealthCheckResult.Unhealthy($"'{options.MagickPath} -version' exited with code {result.ExitCode}.");
+        : HealthCheckResult.Unhealthy($"'{_options.MagickPath} -version' exited with code {result.ExitCode}.");
     }
     catch (ImageProcessingException exception)
     {

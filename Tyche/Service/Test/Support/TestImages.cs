@@ -14,7 +14,7 @@ public static class TestImages
   /// <summary>Creates a solid color image (any extension ImageMagick knows) with the given size.</summary>
   public static string Create(string path, int width, int height, string color = "red")
   {
-    Directory.CreateDirectory(System.IO.Path.GetDirectoryName(path)!);
+    Directory.CreateDirectory(Path.GetDirectoryName(path)!);
     Magick("-size", $"{width}x{height}", color.Contains(':') ? color : $"xc:{color}", path);
     return path;
   }
@@ -35,7 +35,7 @@ public static class TestImages
   /// <summary>Returns format, size and frame count as reported by ImageMagick for the given bytes.</summary>
   public static (string Format, int Width, int Height, int Frames) Identify(byte[] bytes)
   {
-    var file = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tyche-id-" + Guid.NewGuid().ToString("N"));
+    var file = Path.Combine(Path.GetTempPath(), "tyche-id-" + Guid.NewGuid().ToString("N"));
     File.WriteAllBytes(file, bytes);
     try
     {
