@@ -2,7 +2,7 @@ namespace Tyche.Service.Images;
 
 public enum ImageResultStatus
 {
-    Ok,
-    NotFound,
-    Unavailable,
+  Ok,
+  NotFound,
+  Unavailable,
 }

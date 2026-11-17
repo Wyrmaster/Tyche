@@ -1,13 +1,13 @@
 <Project>
 
-    <PropertyGroup>
-        <Authors>Stefan Pichler</Authors>
-        <Company>Stefan Pichler</Company>
-        <Product>Tyche</Product>
-        <!-- Release builds override these: -p:Version=1.0.1.7 -p:InformationalVersion=v1.0.1.7 -->
-        <Version>0.0.0.0</Version>
-        <InformationalVersion>v0.0.0.0-dev</InformationalVersion>
-        <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-    </PropertyGroup>
+  <PropertyGroup>
+    <Authors>Stefan Pichler</Authors>
+    <Company>Stefan Pichler</Company>
+    <Product>Tyche</Product>
+    <!-- Release builds override these: -p:Version=1.0.1.7 -p:InformationalVersion=v1.0.1.7 -->
+    <Version>0.0.0.0</Version>
+    <InformationalVersion>v0.0.0.0-dev</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
 
 </Project>

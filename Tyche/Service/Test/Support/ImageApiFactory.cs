@@ -9,39 +9,39 @@ namespace Tyche.Service.Test.Support;
 
 public sealed class ImageApiFactory : WebApplicationFactory<Program>
 {
-    private readonly Dictionary<string, string?> settings = new();
+  private readonly Dictionary<string, string?> settings = new();
 
-    public ImageApiFactory(TempFolder temp, params (string Name, string Folder)[] collections)
+  public ImageApiFactory(TempFolder temp, params (string Name, string Folder)[] collections)
+  {
+    CachePath = temp.Sub("cache");
+    foreach (var (name, folder) in collections)
     {
-        CachePath = temp.Sub("cache");
-        foreach (var (name, folder) in collections)
-        {
-            settings[$"ImageApi:Collections:{name}"] = folder;
-        }
-
-        settings["ImageApi:DefaultCollection"] = collections.Length > 0 ? collections[0].Name : "";
-        settings["ImageApi:CachePath"] = CachePath;
-        settings["ImageApi:ListingCacheSeconds"] = "1";
-        settings["ImageApi:MaxConcurrentProcesses"] = "2";
+      settings[$"ImageApi:Collections:{name}"] = folder;
     }
 
-    public string CachePath { get; }
+    settings["ImageApi:DefaultCollection"] = collections.Length > 0 ? collections[0].Name : "";
+    settings["ImageApi:CachePath"] = CachePath;
+    settings["ImageApi:ListingCacheSeconds"] = "1";
+    settings["ImageApi:MaxConcurrentProcesses"] = "2";
+  }
 
-    public CountingProcessRunner Runner { get; } = new();
+  public string CachePath { get; }
 
-    public ImageApiFactory With(string key, string value)
+  public CountingProcessRunner Runner { get; } = new();
+
+  public ImageApiFactory With(string key, string value)
+  {
+    settings[$"ImageApi:{key}"] = value;
+    return this;
+  }
+
+  protected override void ConfigureWebHost(IWebHostBuilder builder)
+  {
+    builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(settings));
+    builder.ConfigureServices(services =>
     {
-        settings[$"ImageApi:{key}"] = value;
-        return this;
-    }
-
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(settings));
-        builder.ConfigureServices(services =>
-        {
-            services.RemoveAll<IProcessRunner>();
-            services.AddSingleton<IProcessRunner>(Runner);
-        });
-    }
+      services.RemoveAll<IProcessRunner>();
+      services.AddSingleton<IProcessRunner>(Runner);
+    });
+  }
 }
